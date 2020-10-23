@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>GhostPilot Emojis!</title>
+        <style>
+            .container {
+                display: block;
+                margin: 0 auto;
+                width: 1000px;
+                text-align: center;
+            }
+            h3 {
+                font-family: Sohne, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Ubuntu, sans-serif;
+                font-size: 30px;
+                font-weight: 700;
+                line-height: 34px;
+                margin-bottom: 10px;
+            }
+            dl {
+                display: -webkit-box;
+                display: flex;
+                background-color: white;
+                -webkit-box-orient: vertical;
+                -webkit-box-direction: normal;
+                flex-direction: column;
+                width: 100%;
+                max-width: 700px;
+                position: relative;
+                padding: 20px;
+            }
+            dt {
+                align-self: flex-start;
+                width: 100%;
+                font-weight: 700;
+                display: block;
+                text-align: center;
+                font-size: 1.2em;
+                font-weight: 700;
+                margin-bottom: 20px;
+                margin-left: 130px;
+            }
+            .text {
+                font-weight: 600;
+                display: -webkit-box;
+                display: flex;
+                -webkit-box-align: center;
+                align-items: center;
+                height: 40px;
+                width: 130px;
+                background-color: white;
+                position: absolute;
+                left: 0;
+                -webkit-box-pack: end;
+                justify-content: flex-end;
+            }
+            .percentage {
+                font-size: .8em;
+                line-height: 1;
+                text-transform: uppercase;
+                width: 100%;
+                height: 40px;
+                margin-left: 130px;
+                background: repeating-linear-gradient(to right, #ddd, #ddd 1px, #fff 1px, #fff 5%);
+            }
+            .percentage:after {
+                content: "";
+                display: block;
+                background-color: rgb(104, 117, 217);
+                width: 50px;
+                margin-bottom: 10px;
+                height: 90%;
+                position: relative;
+                top: 50%;
+                -webkit-transform: translateY(-50%);
+                transform: translateY(-50%);
+                -webkit-transition: background-color .3s ease;
+                transition: background-color .3s ease;
+            }
+            {{- range $val := Iterate 100 }}
+            .percentage-{{ $val }}:after {
+                width: {{ $val }}%;
+            }
+            {{- end }}
+        </style>
+    </head>
+    <body>
+    <div class="container">
+        <h3>GhostPilot Twitter Emojis! 👻</h3>
+        {{- if eq (len .Emojis) 0 }}
+            Oh no 😭! There are no emojis yet!
+        {{- else }}
+            <dl>
+                {{$n := len .Emojis}}{{$total := Sum .Emojis}}
+                {{- range $emoji := .Emojis }}
+                    <dd class="percentage percentage-{{Percentage .Count $total}}"><span class="text">{{.Emoji}}: {{.Count}} ({{Percentage .Count $total}}%)</span></dd>
+                {{- end }}
+            </dl>
+        {{- end }}
+    </div>
+    </body>
+</html>
