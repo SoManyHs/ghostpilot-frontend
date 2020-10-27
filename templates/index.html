@@ -82,6 +82,7 @@
             }
             {{- end }}
         </style>
+        <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
     </head>
     <body>
     <div class="container">
@@ -98,4 +99,9 @@
         {{- end }}
     </div>
     </body>
+    <script>
+        twemoji.parse(document.body, {
+            size: 50,
+        });
+    </script>
 </html>

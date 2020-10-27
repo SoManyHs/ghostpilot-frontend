@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -39,15 +41,27 @@ func (s *Server) handleRoot() http.HandlerFunc {
 		if err != nil {
 			emojis = nil
 		}
+
 		sorter := &emojiSorter{
 			emojis: emojis,
 			by: func(e1, e2 emoji) bool {
-				return e1.Count < e2.Count
+				return e1.Count > e2.Count
 			},
 		}
 		sort.Sort(sorter)
-		log.Printf("emojis: %v\n", emojis)
-		renderTemplate(w, "index", emojis)
+		var parsedEmojis []emoji
+		for _, em := range emojis {
+			decoded, err := strconv.ParseUint(em.Emoji, 10, 64)
+			if err != nil {
+				log.Printf("ERROR: server: parse uint: %v\n", err)
+			}
+			parsedEmojis = append(parsedEmojis, emoji{
+				Emoji: string(decoded),
+				Count: em.Count,
+			})
+		}
+		log.Printf("emojis: %v\n", parsedEmojis)
+		renderTemplate(w, "index", parsedEmojis)
 	}
 }
 
@@ -74,14 +88,14 @@ func (s *emojiSorter)  Less(i, j int) bool {
 }
 
 func retrieveEmojis() ([]emoji, error) {
-	endpoint := fmt.Sprintf("http://api.%s:8080/tweets/emojis/", os.Getenv("COPILOT_SERVICE_DISCOVERY_ENDPOINT"))
+	endpoint := fmt.Sprintf("http://backendpu.%s:8080/tweets/emojis", os.Getenv("COPILOT_SERVICE_DISCOVERY_ENDPOINT"))
 	resp, err := http.Get(endpoint)
 	if err != nil {
 		log.Printf("WARN: server: coudln't get emojis: %v\n", err)
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("WARN: server: get vote response status: %d\n", resp.StatusCode)
+		log.Printf("WARN: server: get tweet emojis response status: %d\n", resp.StatusCode)
 		return nil, errors.New("unexpected status code")
 	}
 	defer resp.Body.Close()
@@ -116,7 +130,12 @@ func renderTemplate(w http.ResponseWriter, tmpl string, emojis []emoji) {
 				return sum
 			},
 			"Percentage": func(n, total int) int {
-				return n*100/total
+				p := float64(n)*100.0/float64(total)
+				p = math.Round(p)
+				if p == 0 {
+					return 1
+				}
+				return int(p)
 			},
 		}).
 		ParseFiles(f)
